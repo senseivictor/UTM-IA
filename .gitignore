@@ -1,3 +1,7 @@
 src/data/*
 src/model/*
+
+!src/data/.gitkeep
+!src/model/.gitkeep
+
 .venv/
