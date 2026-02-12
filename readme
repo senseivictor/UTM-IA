@@ -1,0 +1,6 @@
+1. download the zip from https://www.kaggle.com/datasets/zalando-research/fashionmnist
+and put the csv files in the src/data folder
+
+2. run train.py
+ 
+3. run infer.py
