@@ -1,23 +1,14 @@
 import os
-import pandas as pd
-import numpy as np
 import keras
-from utils import load_ubyte
+from utils import load_ubyte_tensors, separate_training_data, get_this_file_dir
 
-X_train_full_tensor, y_train_full_tensor = load_ubyte(
-    'train-images-idx3-ubyte', 
-    'train-labels-idx1-ubyte'
+X_tensor, y_tensor = load_ubyte_tensors(
+    'train/train-images-idx3-ubyte', 
+    'train/train-labels-idx1-ubyte'
 )
 
-# Datele pentru antrenare
-X_train: np.ndarray = X_train_full_tensor[:50000].astype("float32") / 255.0
-y_train: np.ndarray = y_train_full_tensor[:50000]
+X_train, y_train, X_val, y_val = separate_training_data(X_tensor, y_tensor, 50000)
 
-# Datele pentru validare
-X_valid: np.ndarray = X_train_full_tensor[50000:].astype("float32") / 255.0
-y_valid: np.ndarray = y_train_full_tensor[50000:]
-
-# Definirea Arhitecturii
 model: keras.Sequential = keras.Sequential([
     keras.layers.Flatten(input_shape=(28, 28)),
     keras.layers.Dense(256, activation='relu'),
@@ -25,18 +16,18 @@ model: keras.Sequential = keras.Sequential([
     keras.layers.Dense(10, activation='softmax')
 ])
 
-# 4. Compilarea
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-
-# 5. Antrenarea
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+              
 print("\nÎncepe procesul de antrenare...")
-model.fit(X_train, y_train, 
-          epochs=10, 
-          batch_size=32, 
-          validation_data=(X_valid, y_valid))
-
-# 6. Salvarea modelului (Exportăm "cunoștințele")
-model.save(model_save_path)
-print(f"\nModelul a fost salvat cu succes în '{model_save_path}'")
+model.fit(
+    X_train, y_train, 
+    epochs=10, 
+    batch_size=32, 
+    validation_data=(X_val, y_val)
+)
+model.save(os.path.join(get_this_file_dir(), 'model', 'model.keras'))
+print(f"\nModelul a fost salvat cu succes")

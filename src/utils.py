@@ -12,7 +12,7 @@ def read_training_data_csv():
    return pd.read_csv(path)
 
 
-def load_ubyte(images_path: str, labels_path: str):
+def load_ubyte_tensors(images_path: str, labels_path: str):
    full_images_path = os.path.join(get_this_file_dir(), 'data', images_path)
    full_labels_path = os.path.join(get_this_file_dir(), 'data', labels_path)
    with open(full_images_path, 'rb') as f:
@@ -48,3 +48,12 @@ def load_ubyte(images_path: str, labels_path: str):
       y_labels_full_tensor = np.fromfile(f, dtype=np.uint8)
 
    return X_images_full_tensor, y_labels_full_tensor 
+
+def separate_training_data(X_tensor, y_tensor, training_data_size: int = 50000):
+   X_training_data: np.ndarray = X_tensor[:training_data_size].astype("float32") / 255.0
+   y_training_data: np.ndarray = y_tensor[:training_data_size]
+
+   X_validation_data: np.ndarray = X_tensor[training_data_size:].astype("float32") / 255.0
+   y_validation_data: np.ndarray = y_tensor[training_data_size:]
+
+   return X_training_data, y_training_data, X_validation_data, y_validation_data
