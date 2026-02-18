@@ -2,26 +2,22 @@ import os
 import pandas as pd
 import numpy as np
 import keras
+from utils import load_ubyte
 
-# Obținem calea absolută către folderul unde se află scriptul curent
-BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
-csv_train_path: str = os.path.join(BASE_DIR, 'data', 'fashion-mnist_train.csv')
-model_save_path = os.path.join(BASE_DIR, 'model', 'model_fashion.h5')
+X_train_full_tensor, y_train_full_tensor = load_ubyte(
+    'train-images-idx3-ubyte', 
+    'train-labels-idx1-ubyte'
+)
 
-print("Se încarcă datele pentru antrenare...")
-train_df: pd.DataFrame = pd.read_csv(csv_train_path)
+# Datele pentru antrenare
+X_train: np.ndarray = X_train_full_tensor[:50000].astype("float32") / 255.0
+y_train: np.ndarray = y_train_full_tensor[:50000]
 
-# Extragem etichetele și pixelii
-y_train_full: np.ndarray = train_df['label'].values
-X_train_full: np.ndarray = train_df.drop('label', axis=1).values.reshape(-1, 28, 28)
+# Datele pentru validare
+X_valid: np.ndarray = X_train_full_tensor[50000:].astype("float32") / 255.0
+y_valid: np.ndarray = y_train_full_tensor[50000:]
 
-# 2. Pregătirea datelor (Slicing & Normalizare)
-X_train: np.ndarray = X_train_full[:50000].astype("float32") / 255.0
-X_valid: np.ndarray = X_train_full[50000:].astype("float32") / 255.0
-y_train: np.ndarray = y_train_full[:50000]
-y_valid: np.ndarray = y_train_full[50000:]
-
-# 3. Definirea Arhitecturii
+# Definirea Arhitecturii
 model: keras.Sequential = keras.Sequential([
     keras.layers.Flatten(input_shape=(28, 28)),
     keras.layers.Dense(256, activation='relu'),

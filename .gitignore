@@ -1,7 +1,8 @@
-src/data/*
-src/model/*
+# src/data/*
+# src/model/*
 
-!src/data/.gitkeep
-!src/model/.gitkeep
+# !src/data/.gitkeep
+# !src/model/.gitkeep
 
 .venv/
+__pycache__/
