@@ -5,4 +5,5 @@
 # !src/model/.gitkeep
 
 .venv/
+.conda_env/
 __pycache__/

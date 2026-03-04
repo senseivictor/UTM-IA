@@ -1,46 +1,39 @@
 import tensorflow as tf
+from tensorflow import config
 import numpy as np
-
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import MaxPooling2D
-from tensorflow.keras.layers import Dropout 
-from tensorflow.keras.layers import Conv2DTranspose
-from tensorflow.keras.layers import concatenate
-
-from test_utils import summary, comparator
-
 import os
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+from utils import process_path, model, get_this_file_dir
 
-import imageio
+print("Numar GPU-uri disponibile: ", len(config.list_physical_devices('GPU')))
 
-import matplotlib.pyplot as plt
-from utils import process_path, preprocess
-
-path = ''
+path = get_this_file_dir()
 image_path = os.path.join(path, './data/CameraRGB/')
 mask_path = os.path.join(path, './data/CameraMask/')
-image_list = os.listdir(image_path)
-mask_list = os.listdir(mask_path)
-image_list = [image_path+i for i in image_list]
-mask_list = [mask_path+i for i in mask_list]
 
-image_list_ds = tf.data.Dataset.list_files(image_list, shuffle=False)
-mask_list_ds = tf.data.Dataset.list_files(mask_list, shuffle=False)
+image_files = sorted([os.path.join(image_path, f) for f in os.listdir(image_path)])
+mask_files = sorted([os.path.join(mask_path, f) for f in os.listdir(mask_path)])
 
-for path in zip(image_list_ds.take(3), mask_list_ds.take(3)):
-    print(path)
+# 2. Slicing pentru Training (80% din ~850 de imagini = 680)
+train_images = image_files[:680]
+train_masks = mask_files[:680]
 
-image_filenames = tf.constant(image_list)
-masks_filenames = tf.constant(mask_list)
+# 3. CREAREA OBIECTULUI DATASET (Aici era eroarea!)
+# Transformăm listele de string-uri într-un obiect tf.data.Dataset
+dataset = tf.data.Dataset.from_tensor_slices((train_images, train_masks))
 
-dataset = tf.data.Dataset.from_tensor_slices((image_filenames, masks_filenames))
+model.compile(
+    optimizer='adam', # Acesta folosește NIU (learning rate) pentru a ajusta greutățile
+    loss='sparse_categorical_crossentropy', # Calculează eroarea pentru fiecare pixel
+    metrics=['accuracy']
+)
 
-for image, mask in dataset.take(1):
-    print(image)
-    print(mask)
+# Împărțim datele în grupuri (batch-uri) de 32
+dataset = dataset.map(process_path).batch(32)
 
-image_ds = dataset.map(process_path)
-processed_image_ds = image_ds.map(preprocess)
+# Pornim antrenarea
+model.fit(
+    dataset, 
+    epochs=10,
+)
+
+model.save(os.path.join(get_this_file_dir(), 'model', 'unet_model.h5'))

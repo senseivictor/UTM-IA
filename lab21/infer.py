@@ -17,7 +17,7 @@ X_tensor, y_tensor = load_ubyte_tensors(
 )
 
 # results = [loss, accuracy]
-results: list[float, float] = model.evaluate(X_tensor, y_tensor)
+results: list[float] = model.evaluate(X_tensor, y_tensor)
 print(f'\nAcuratețea modelului: {results[1]*100:.2f}%')
 
 # Luăm primele 5 imagini din setul de test

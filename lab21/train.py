@@ -1,5 +1,6 @@
 import os
 import keras
+from keras import layers
 from utils import load_ubyte_tensors, separate_training_data, get_this_file_dir
 
 X_tensor, y_tensor = load_ubyte_tensors(
@@ -10,10 +11,10 @@ X_tensor, y_tensor = load_ubyte_tensors(
 X_train, y_train, X_val, y_val = separate_training_data(X_tensor, y_tensor, 50000)
 
 model: keras.Sequential = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28, 28)),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(128, activation='relu'),
-    keras.layers.Dense(10, activation='softmax')
+    layers.Flatten(input_shape=(28, 28)),
+    layers.Dense(256, activation='relu'),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(10, activation='softmax')
 ])
 
 model.compile(

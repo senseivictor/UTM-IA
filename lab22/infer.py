@@ -1,30 +1,50 @@
-import os
-import keras
+import tensorflow as tf
+import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from utils import load_ubyte_tensors, get_this_file_dir
+import os
+from utils import process_path, get_this_file_dir
 
-class_names: list[str] = ['Tricou', 'Pantaloni', 'Pulover', 'Rochie', 'Palton', 
-                          'Sandală', 'Cămașă', 'Adidași', 'Geantă', 'Ghete']
+# 1. Căi către date și model
+path = get_this_file_dir()
+model_path = os.path.join(path, 'model', 'unet_model.h5')
+image_dir = os.path.join(path, 'data', 'CameraRGB')
+mask_dir = os.path.join(path, 'data', 'CameraMask')
 
-model: keras.Sequential = keras.models.load_model(
-    os.path.join(get_this_file_dir(), 'model', 'model.keras')
-)
+# 2. Încărcăm modelul
+print("Se încarcă modelul...")
+unet = tf.keras.models.load_model(model_path)
 
-X_tensor, y_tensor = load_ubyte_tensors(
-    'test/t10k-images-idx3-ubyte', 
-    'test/t10k-labels-idx1-ubyte'
-)
+# 3. Luăm o imagine de test (una de la finalul listei, nefolosită în training)
+image_files = sorted([os.path.join(image_dir, f) for f in os.listdir(image_dir)])
+mask_files = sorted([os.path.join(mask_dir, f) for f in os.listdir(mask_dir)])
 
-# results = [loss, accuracy]
-results: list[float, float] = model.evaluate(X_tensor, y_tensor)
-print(f'\nAcuratețea modelului: {results[1]*100:.2f}%')
+test_img_path = image_files[-1] # Ultima imagine din dataset
+test_mask_path = mask_files[-1]
 
-# Luăm primele 5 imagini din setul de test
-predictions: np.ndarray = model.predict(X_tensor[:5])
+# Procesăm imaginea pentru model
+image, mask = process_path(test_img_path, test_mask_path)
 
-print("\nRezultate predicții individuale:")
-for i in range(5):
-    predicted_idx: int = int(np.argmax(predictions[i]))
-    actual_idx: int = int(y_tensor[i])
-    print(f"Imaginea {i+1}: Predicție -> {class_names[predicted_idx]} | Real -> {class_names[actual_idx]}")
+# 4. Predicția
+# Adăugăm o dimensiune extra (batch size) pentru că modelul așteaptă (1, 128, 128, 3)
+pred_mask = unet.predict(image[tf.newaxis, ...])
+
+# Luăm clasa cu probabilitatea maximă pentru fiecare pixel (Argmax)
+pred_mask = tf.argmax(pred_mask, axis=-1)
+pred_mask = pred_mask[0] # Scoatem dimensiunea de batch
+
+# 5. Vizualizare
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 3, 1)
+plt.title("Imagine Originală")
+plt.imshow(image)
+
+plt.subplot(1, 3, 2)
+plt.title("Masca Reală (Ground Truth)")
+plt.imshow(mask)
+
+plt.subplot(1, 3, 3)
+plt.title("Predicția Modelului")
+plt.imshow(pred_mask)
+
+plt.show()
