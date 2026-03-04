@@ -10,8 +10,8 @@ from utils import (
 print("Numar GPU-uri disponibile: ", len(config.list_physical_devices('GPU')))
 
 X_tensor, y_tensor = load_images_and_masks_tensors(
-    "./data/CameraRGB/", 
-    "./data/CameraMask/"
+    "./data/image-segmentation/resized/CameraRGB/", 
+    "./data/image-segmentation/resized/CameraMask/"
 )
 
 X_train, y_train, X_val, y_val = separate_training_data(X_tensor, y_tensor, 680)

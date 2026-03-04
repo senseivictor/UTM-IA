@@ -59,12 +59,10 @@ def load_images_and_masks_tensors(images_path, masks_path):
     img = tf.io.read_file(os.path.join(get_this_file_dir(), images_path))
     img = tf.image.decode_png(img, channels=3)
     img = tf.image.convert_image_dtype(img, tf.float32)
-    img = tf.image.resize(img, (128, 128))
     
     mask = tf.io.read_file(os.path.join(get_this_file_dir(), masks_path))
     mask = tf.image.decode_png(mask, channels=1)
     mask = tf.image.convert_image_dtype(mask, tf.float32)
-    mask = tf.image.resize(mask, (128, 128))
     return img, mask
 
 def simple_unet(input_shape=(128, 128, 3), num_classes=23):

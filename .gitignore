@@ -6,4 +6,5 @@
 
 .venv/
 .conda_env/
+src/data/image-segmentation/original/
 __pycache__/
