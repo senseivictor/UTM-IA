@@ -1,8 +1,10 @@
+import sys
 import os
 import pandas as pd
 import numpy as np
 import struct
 import tensorflow as tf
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 
 def get_this_file_dir():
    return os.path.dirname(os.path.abspath(__file__))
