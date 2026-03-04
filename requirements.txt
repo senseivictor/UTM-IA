@@ -1,3 +1,4 @@
 tensorflow-directml-plugin
 numpy<2
 pandas
+matplotlib
