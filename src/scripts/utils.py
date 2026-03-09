@@ -10,8 +10,8 @@ def get_this_file_dir():
    return os.path.dirname(os.path.abspath(__file__))
 
 def load_ubyte_tensors(images_path: str, labels_path: str):
-   full_images_path = os.path.join(get_this_file_dir(), 'data', images_path)
-   full_labels_path = os.path.join(get_this_file_dir(), 'data', labels_path)
+   full_images_path = images_path
+   full_labels_path = labels_path
    with open(full_images_path, 'rb') as f:
       # Citim header-ul (primii 16 octeti (bytes)): 
       #  - Magic Number (4 bytes): 
@@ -58,14 +58,29 @@ def separate_training_data(X_tensor, y_tensor, training_data_size: int = 50000):
    return X_training_data, y_training_data, X_validation_data, y_validation_data
 
 def load_images_and_masks_tensors(images_path, masks_path):
-    img = tf.io.read_file(os.path.join(get_this_file_dir(), images_path))
-    img = tf.image.decode_png(img, channels=3)
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    
-    mask = tf.io.read_file(os.path.join(get_this_file_dir(), masks_path))
-    mask = tf.image.decode_png(mask, channels=1)
-    mask = tf.image.convert_image_dtype(mask, tf.float32)
-    return img, mask
+   import glob
+
+   image_files = sorted(glob.glob(os.path.join(images_path, "*.png")))
+   mask_files = sorted(glob.glob(os.path.join(masks_path, "*.png")))
+   
+   images = []
+   masks = []
+   
+   print(f"Incarcam {len(image_files)} imagini din {images_path}...")
+   
+   for img_p, msk_p in zip(image_files, mask_files):
+      img = tf.io.read_file(img_p)
+      img = tf.image.decode_png(img, channels=3)
+      img = tf.image.resize(img, (128, 128))
+      img = img / 255.0
+      images.append(img)
+      
+      mask = tf.io.read_file(msk_p)
+      mask = tf.image.decode_png(mask, channels=1)
+      mask = tf.image.resize(mask, (128, 128), method='nearest')
+      masks.append(mask)
+      
+   return tf.stack(images), tf.stack(masks)
 
 def simple_unet(input_shape=(128, 128, 3), num_classes=23):
     inputs = tf.keras.layers.Input(input_shape)
