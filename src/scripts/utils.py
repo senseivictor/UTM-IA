@@ -4,14 +4,42 @@ import pandas as pd
 import numpy as np
 import struct
 import tensorflow as tf
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
+from pathlib import Path
+from typing import Union, Any, cast
+import keras
 
-def get_this_file_dir():
-   return os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-def load_ubyte_tensors(images_path: str, labels_path: str):
-   full_images_path = images_path
-   full_labels_path = labels_path
+def subproject_root(file: str):
+   """
+   Urcă în ierarhie până găsește folderul care conține 
+   atât subfolderul 'data' cât și 'scripts'.
+   """
+   current_path = Path(file).resolve()
+   
+   # Parcurgem toți părinții fișierului curent
+   for parent in current_path.parents:
+      # Verificăm existența ambelor directoare în locația curentă
+      if (parent / "data").is_dir() and (parent / "scripts").is_dir():
+         return parent
+         
+   # Fallback: returnează directorul părinte dacă nu găsește structura
+   return current_path.parent
+
+def data_path(file):
+   return subproject_root(file) / 'data'
+
+def models_path(file):
+   return subproject_root(file) / 'models'
+
+def load_project_model(file, model_name):
+   path = models_path(file) / model_name
+   loaded_model = keras.models.load_model(path)
+   return cast(Any, loaded_model)
+
+def load_ubyte_tensors(file, images_path: Union[str, Path], labels_path: Union[str, Path]):
+   full_images_path = data_path(file) / images_path
+   full_labels_path = data_path(file) / labels_path
    with open(full_images_path, 'rb') as f:
       # Citim header-ul (primii 16 octeti (bytes)): 
       #  - Magic Number (4 bytes): 
@@ -57,30 +85,29 @@ def separate_training_data(X_tensor, y_tensor, training_data_size: int = 50000):
 
    return X_training_data, y_training_data, X_validation_data, y_validation_data
 
-def load_images_and_masks_tensors(images_path, masks_path):
-   import glob
+def load_images_and_masks_tensors(file, images_path, masks_path, selection=slice(None)):
+    # 1. Găsim căile către fișiere
+    base = data_path(file)
+    image_files = sorted(list((base / images_path).glob("*.png")))[selection]
+    mask_files = sorted(list((base / masks_path).glob("*.png")))[selection]
 
-   image_files = sorted(glob.glob(os.path.join(images_path, "*.png")))
-   mask_files = sorted(glob.glob(os.path.join(masks_path, "*.png")))
-   
-   images = []
-   masks = []
-   
-   print(f"Incarcam {len(image_files)} imagini din {images_path}...")
-   
-   for img_p, msk_p in zip(image_files, mask_files):
-      img = tf.io.read_file(img_p)
-      img = tf.image.decode_png(img, channels=3)
-      img = tf.image.resize(img, (128, 128))
-      img = img / 255.0
-      images.append(img)
+    images, masks = [], []
+    
+    # 2. Procesăm perechile
+    for img_p, msk_p in zip(image_files, mask_files):
+        # Imagine RGB: citire -> decode -> resize -> normalizare
+        img = tf.io.read_file(str(img_p))
+        img = tf.image.decode_png(img, channels=3)
+        img = tf.image.resize(img, (128, 128)) / 255.0
+        images.append(img)
+        
+        # Mască Grayscale: citire -> decode -> resize (nearest)
+        mask = tf.io.read_file(str(msk_p))
+        mask = tf.image.decode_png(mask, channels=1)
+        mask = tf.image.resize(mask, (128, 128), method='nearest')
+        masks.append(mask)
       
-      mask = tf.io.read_file(msk_p)
-      mask = tf.image.decode_png(mask, channels=1)
-      mask = tf.image.resize(mask, (128, 128), method='nearest')
-      masks.append(mask)
-      
-   return tf.stack(images), tf.stack(masks)
+    return tf.stack(images), tf.stack(masks)
 
 def simple_unet(input_shape=(128, 128, 3), num_classes=23):
     inputs = tf.keras.layers.Input(input_shape)
