@@ -4,6 +4,7 @@
 # !src/data/.gitkeep
 # !src/model/.gitkeep
 
+*.egg-info
 .venv/
 .conda_env/
 src/data/image-segmentation/original/
