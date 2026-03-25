@@ -1,4 +1,3 @@
-import os
 import keras
 from keras import layers
 from scripts.utils import load_ubyte_tensors, separate_training_data, models_path

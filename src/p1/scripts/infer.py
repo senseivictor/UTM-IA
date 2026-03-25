@@ -1,8 +1,6 @@
-import os
 import keras
-from keras.models import load_model
 import numpy as np
-from scripts.utils import load_ubyte_tensors, subproject_root, load_project_model, data_path
+from scripts.utils import load_ubyte_tensors, load_project_model
 
 class_names: list[str] = ['Tricou', 'Pantaloni', 'Pulover', 'Rochie', 'Palton', 
                           'Sandală', 'Cămașă', 'Adidași', 'Geantă', 'Ghete']

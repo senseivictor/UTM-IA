@@ -1,4 +1,3 @@
-import os
 from scripts.utils import (
     load_images_and_masks_tensors, 
     separate_training_data,
@@ -25,7 +24,7 @@ model.compile(
 model.fit(
     X_train, y_train, 
     epochs=10,
-    batch_size=16,
+    batch_size=32,
     validation_data=(X_val, y_val)
 )
 

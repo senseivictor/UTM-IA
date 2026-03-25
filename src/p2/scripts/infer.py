@@ -1,8 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import os
 import keras
-from scripts.utils import load_images_and_masks_tensors, load_project_model, data_path
+from scripts.utils import load_images_and_masks_tensors, load_project_model
 
 unet: keras.Model = load_project_model(__file__, 'unet_model.h5')
 
@@ -12,6 +11,9 @@ X_images, y_masks = load_images_and_masks_tensors(
     'resized/CameraMask', 
     selection=slice(-3, None)
 )
+
+results: list[float] = unet.evaluate(X_images, y_masks)
+print(f'\nAcuratețea modelului: {results[1]*100:.2f}%')
 
 pred_masks_raw = unet.predict(X_images)
 
